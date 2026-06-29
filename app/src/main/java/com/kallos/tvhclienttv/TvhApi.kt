@@ -168,3 +168,121 @@ private fun channelSortKey(number: String): Int {
 
     return (main * 1000) + sub
 }
+
+data class StreamProfile(
+    val uuid: String,
+    val name: String,
+)
+
+data class TvhEpgEvent(
+    val channelUuid: String,
+    val title: String,
+    val subtitle: String,
+    val start: Long,
+    val stop: Long,
+)
+
+data class ProfileLoadResult(
+    val profiles: List<StreamProfile> = emptyList(),
+    val error: String? = null,
+)
+
+data class EpgLoadResult(
+    val events: List<TvhEpgEvent> = emptyList(),
+    val error: String? = null,
+)
+
+fun loadTvhProfiles(
+    serverUrl: String,
+    username: String,
+    password: String,
+): ProfileLoadResult {
+    return try {
+        val json = requestJson(
+            "$serverUrl/api/profile/list",
+            username,
+            password,
+        )
+
+        val root = JSONObject(json)
+        val entries = root.optJSONArray("entries") ?: JSONArray()
+
+        val profiles = buildList {
+            for (index in 0 until entries.length()) {
+                val item = entries.optJSONObject(index) ?: continue
+
+                val uuid = item.optString("uuid")
+                val name = item.optString("name")
+
+                if (uuid.isNotBlank() && name.isNotBlank()) {
+                    add(StreamProfile(uuid, name))
+                }
+            }
+        }
+
+        ProfileLoadResult(
+            profiles = if (profiles.isNotEmpty()) profiles else defaultProfiles(),
+        )
+    } catch (error: Exception) {
+        ProfileLoadResult(
+            profiles = defaultProfiles(),
+            error = error.message ?: error.javaClass.simpleName,
+        )
+    }
+}
+
+fun loadCurrentEpg(
+    serverUrl: String,
+    username: String,
+    password: String,
+): EpgLoadResult {
+    return try {
+        val json = requestJson(
+            "$serverUrl/api/epg/events/grid?limit=3000&start=0&mode=now",
+            username,
+            password,
+        )
+
+        val root = JSONObject(json)
+        val entries = root.optJSONArray("entries") ?: JSONArray()
+
+        val events = buildList {
+            for (index in 0 until entries.length()) {
+                val item = entries.optJSONObject(index) ?: continue
+
+                val channelUuid = item.optString("channelUuid")
+                    .ifBlank { item.optString("channel") }
+
+                val title = item.optString("title")
+                val subtitle = item.optString("subtitle")
+
+                if (channelUuid.isBlank() || title.isBlank()) {
+                    continue
+                }
+
+                add(
+                    TvhEpgEvent(
+                        channelUuid = channelUuid,
+                        title = title,
+                        subtitle = subtitle,
+                        start = item.optLong("start"),
+                        stop = item.optLong("stop"),
+                    )
+                )
+            }
+        }
+
+        EpgLoadResult(events = events)
+    } catch (error: Exception) {
+        EpgLoadResult(
+            error = error.message ?: error.javaClass.simpleName,
+        )
+    }
+}
+
+private fun defaultProfiles(): List<StreamProfile> {
+    return listOf(
+        StreamProfile("pass", "pass (원본)"),
+        StreamProfile("htsp", "htsp (기본)"),
+    )
+}

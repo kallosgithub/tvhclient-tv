@@ -41,6 +41,8 @@ private enum class AppScreen {
     Home,
     Settings,
     Channels,
+    Epg,
+    Profiles,
 }
 
 private enum class InputField {
@@ -92,6 +94,8 @@ private fun TvhClientTvApp() {
             connectionMessage = connectionMessage,
             hasServer = !preferences.getString("server_url", "").isNullOrBlank(),
             onOpenChannels = { screen = AppScreen.Channels },
+            onOpenEpg = { screen = AppScreen.Epg },
+            onOpenProfiles = { screen = AppScreen.Profiles },
             onOpenSettings = { screen = AppScreen.Settings },
         )
 
@@ -111,6 +115,22 @@ private fun TvhClientTvApp() {
             onBack = { screen = AppScreen.Home },
             onOpenSettings = { screen = AppScreen.Settings },
         )
+
+        AppScreen.Epg -> EpgScreen(
+            serverUrl = preferences.getString("server_url", "") ?: "",
+            username = preferences.getString("username", "") ?: "",
+            password = preferences.getString("password", "") ?: "",
+            preferences = preferences,
+            onBack = { screen = AppScreen.Home },
+        )
+
+        AppScreen.Profiles -> ProfileScreen(
+            serverUrl = preferences.getString("server_url", "") ?: "",
+            username = preferences.getString("username", "") ?: "",
+            password = preferences.getString("password", "") ?: "",
+            preferences = preferences,
+            onBack = { screen = AppScreen.Home },
+        )
     }
 }
 
@@ -119,6 +139,8 @@ private fun HomeScreen(
     connectionMessage: String,
     hasServer: Boolean,
     onOpenChannels: () -> Unit,
+    onOpenEpg: () -> Unit,
+    onOpenProfiles: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     var statusMessage by remember {
@@ -165,7 +187,24 @@ private fun HomeScreen(
         TvMenuButton(
             text = "EPG 편성표",
             onClick = {
-                statusMessage = "EPG는 채널 목록 다음 단계에서 추가합니다."
+                if (hasServer) {
+                    onOpenEpg()
+                } else {
+                    statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
+                }
+            },
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TvMenuButton(
+            text = "스트림 프로파일",
+            onClick = {
+                if (hasServer) {
+                    onOpenProfiles()
+                } else {
+                    statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
+                }
             },
         )
 
