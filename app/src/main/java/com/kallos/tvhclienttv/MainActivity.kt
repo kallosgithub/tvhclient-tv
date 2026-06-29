@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -231,7 +231,7 @@ private fun SettingsScreen(
             horizontalArrangement = Arrangement.spacedBy(26.dp),
         ) {
             Column(
-                modifier = Modifier.weight(0.42f),
+                modifier = Modifier.width(430.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 SettingFieldButton(
@@ -324,7 +324,7 @@ private fun SettingsScreen(
             }
 
             Column(
-                modifier = Modifier.weight(0.58f),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.Top,
             ) {
                 Text(
