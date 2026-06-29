@@ -1,5 +1,6 @@
 package com.kallos.tvhclienttv
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Base64
 import androidx.activity.ComponentActivity
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,8 +62,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun TvhClientTvApp() {
-    val preferences = remember {
-        getSharedPreferences("tvh_settings", MODE_PRIVATE)
+    val context = LocalContext.current
+    val preferences = remember(context) {
+        context.getSharedPreferences("tvh_settings", Context.MODE_PRIVATE)
     }
 
     var screen by remember { mutableStateOf(AppScreen.Home) }
@@ -167,6 +170,7 @@ private fun SettingsScreen(
     onConnectionChanged: (String) -> Unit,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
     var serverUrl by remember {
         mutableStateOf(preferences.getString("server_url", "") ?: "")
     }
@@ -322,7 +326,7 @@ private fun SettingsScreen(
                             password = password,
                         )
 
-                        runOnUiThread {
+                        context.mainExecutor.execute {
                             isTesting = false
 
                             if (result.success) {
