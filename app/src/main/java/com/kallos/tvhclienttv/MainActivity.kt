@@ -417,7 +417,7 @@ private fun TvKeyboard(
     ) {
         rows.forEach { row ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 row.forEach { key ->
                     KeyboardKey(
@@ -429,7 +429,7 @@ private fun TvKeyboard(
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             KeyboardKey(
                 text = "abc",
@@ -463,8 +463,8 @@ private fun KeyboardKey(
     Button(
         onClick = onClick,
         modifier = Modifier
-            .width(44.dp)
-            .height(44.dp),
+            .width(38.dp)
+            .height(38.dp),
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF24334D),
             contentColor = Color.White,
@@ -475,7 +475,7 @@ private fun KeyboardKey(
         Text(
             text = text,
             color = Color.White,
-            fontSize = if (text.length == 1) 19.sp else 11.sp,
+            fontSize = if (text.length == 1) 17.sp else 10.sp,
         )
     }
 }
