@@ -43,6 +43,7 @@ private enum class AppScreen {
     Channels,
     Epg,
     Profiles,
+    Player,
 }
 
 private enum class InputField {
@@ -75,6 +76,7 @@ private fun TvhClientTvApp() {
     }
 
     var screen by remember { mutableStateOf(AppScreen.Home) }
+    var playerChannel by remember { mutableStateOf<TvhChannel?>(null) }
     var connectionMessage by remember {
         mutableStateOf(
             if (preferences.getString("server_url", "").isNullOrBlank()) {
@@ -114,6 +116,10 @@ private fun TvhClientTvApp() {
             preferences = preferences,
             onBack = { screen = AppScreen.Home },
             onOpenSettings = { screen = AppScreen.Settings },
+            onPlayChannel = { channel ->
+                playerChannel = channel
+                screen = AppScreen.Player
+            },
         )
 
         AppScreen.Epg -> EpgScreen(
@@ -131,6 +137,23 @@ private fun TvhClientTvApp() {
             preferences = preferences,
             onBack = { screen = AppScreen.Home },
         )
+
+        AppScreen.Player -> {
+            val channel = playerChannel
+
+            if (channel == null) {
+                screen = AppScreen.Channels
+            } else {
+                PlayerScreen(
+                    channel = channel,
+                    serverUrl = preferences.getString("server_url", "") ?: "",
+                    username = preferences.getString("username", "") ?: "",
+                    password = preferences.getString("password", "") ?: "",
+                    profileId = preferences.getString("stream_profile", "pass") ?: "pass",
+                    onBack = { screen = AppScreen.Channels },
+                )
+            }
+        }
     }
 }
 
@@ -234,6 +257,7 @@ private fun ChannelScreen(
     preferences: android.content.SharedPreferences,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
+    onPlayChannel: (TvhChannel) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -467,9 +491,9 @@ private fun ChannelScreen(
                     )
 
                     TvMenuButton(
-                        text = "재생 준비",
+                        text = "재생",
                         onClick = {
-                            statusMessage = "다음 단계에서 TVHeadend 스트림 재생을 연결합니다."
+                            onPlayChannel(selected)
                         },
                     )
                 }
