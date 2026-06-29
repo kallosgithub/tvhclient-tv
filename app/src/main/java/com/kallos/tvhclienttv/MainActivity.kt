@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -171,6 +172,7 @@ private fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+
     var serverUrl by remember {
         mutableStateOf(preferences.getString("server_url", "") ?: "")
     }
@@ -184,17 +186,9 @@ private fun SettingsScreen(
     var activeField by remember { mutableStateOf(InputField.ServerUrl) }
     var keyboardMode by remember { mutableStateOf(KeyboardMode.Lower) }
     var statusMessage by remember {
-        mutableStateOf("주소를 입력한 뒤 연결 테스트를 실행하세요.")
+        mutableStateOf("왼쪽 입력칸을 선택한 뒤 오른쪽 키보드로 입력하세요.")
     }
     var isTesting by remember { mutableStateOf(false) }
-
-    fun currentValue(): String {
-        return when (activeField) {
-            InputField.ServerUrl -> serverUrl
-            InputField.Username -> username
-            InputField.Password -> password
-        }
-    }
 
     fun appendText(text: String) {
         when (activeField) {
@@ -206,17 +200,9 @@ private fun SettingsScreen(
 
     fun deleteLastCharacter() {
         when (activeField) {
-            InputField.ServerUrl -> {
-                if (serverUrl.isNotEmpty()) serverUrl = serverUrl.dropLast(1)
-            }
-
-            InputField.Username -> {
-                if (username.isNotEmpty()) username = username.dropLast(1)
-            }
-
-            InputField.Password -> {
-                if (password.isNotEmpty()) password = password.dropLast(1)
-            }
+            InputField.ServerUrl -> if (serverUrl.isNotEmpty()) serverUrl = serverUrl.dropLast(1)
+            InputField.Username -> if (username.isNotEmpty()) username = username.dropLast(1)
+            InputField.Password -> if (password.isNotEmpty()) password = password.dropLast(1)
         }
     }
 
@@ -224,134 +210,139 @@ private fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0B1020))
-            .padding(horizontal = 58.dp, vertical = 34.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
+            .padding(horizontal = 48.dp, vertical = 28.dp),
     ) {
         Text(
             text = "TVHeadend 서버 설정",
             color = Color.White,
-            fontSize = 36.sp,
+            fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
         )
 
         Text(
             text = statusMessage,
             color = Color(0xFF9AA4B2),
-            fontSize = 17.sp,
-            modifier = Modifier.padding(top = 10.dp, bottom = 20.dp),
+            fontSize = 15.sp,
+            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
         )
 
-        SettingFieldButton(
-            label = "서버 주소",
-            value = serverUrl.ifBlank { "예: http://192.168.0.10:9981" },
-            selected = activeField == InputField.ServerUrl,
-            onClick = { activeField = InputField.ServerUrl },
-        )
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(26.dp),
+        ) {
+            Column(
+                modifier = Modifier.weight(0.42f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                SettingFieldButton(
+                    label = "서버 주소",
+                    value = serverUrl.ifBlank { "예: http://192.168.0.10:9981" },
+                    selected = activeField == InputField.ServerUrl,
+                    onClick = { activeField = InputField.ServerUrl },
+                )
 
-        Spacer(modifier = Modifier.height(10.dp))
+                SettingFieldButton(
+                    label = "사용자 이름",
+                    value = username.ifBlank { "인증이 없으면 비워 두세요." },
+                    selected = activeField == InputField.Username,
+                    onClick = { activeField = InputField.Username },
+                )
 
-        SettingFieldButton(
-            label = "사용자 이름",
-            value = username.ifBlank { "인증이 없으면 비워 두세요." },
-            selected = activeField == InputField.Username,
-            onClick = { activeField = InputField.Username },
-        )
+                SettingFieldButton(
+                    label = "비밀번호",
+                    value = if (password.isBlank()) "인증이 없으면 비워 두세요."
+                    else "•".repeat(password.length),
+                    selected = activeField == InputField.Password,
+                    onClick = { activeField = InputField.Password },
+                )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        SettingFieldButton(
-            label = "비밀번호",
-            value = if (password.isBlank()) {
-                "인증이 없으면 비워 두세요."
-            } else {
-                "•".repeat(password.length)
-            },
-            selected = activeField == InputField.Password,
-            onClick = { activeField = InputField.Password },
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Text(
-            text = "입력 중: ${
-                when (activeField) {
-                    InputField.ServerUrl -> "서버 주소"
-                    InputField.Username -> "사용자 이름"
-                    InputField.Password -> "비밀번호"
-                }
-            }",
-            color = Color(0xFF78B9FF),
-            fontSize = 17.sp,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        TvKeyboard(
-            mode = keyboardMode,
-            onModeChange = { keyboardMode = it },
-            onKeyClick = { appendText(it) },
-            onBackspace = { deleteLastCharacter() },
-            onSpace = { appendText(" ") },
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Row {
-            TvMenuButton(
-                text = if (isTesting) "연결 확인 중..." else "저장 및 연결 테스트",
-                enabled = !isTesting,
-                onClick = {
-                    val normalizedUrl = serverUrl.trim().trimEnd('/')
-
-                    if (normalizedUrl.isBlank()) {
-                        statusMessage = "서버 주소를 먼저 입력하세요."
-                        return@TvMenuButton
-                    }
-
-                    if (!normalizedUrl.startsWith("http://") &&
-                        !normalizedUrl.startsWith("https://")
-                    ) {
-                        statusMessage = "주소는 http:// 또는 https:// 로 시작해야 합니다."
-                        return@TvMenuButton
-                    }
-
-                    isTesting = true
-                    statusMessage = "TVHeadend 서버에 연결하는 중입니다."
-
-                    Thread {
-                        val result = testTvhConnection(
-                            serverUrl = normalizedUrl,
-                            username = username.trim(),
-                            password = password,
-                        )
-
-                        context.mainExecutor.execute {
-                            isTesting = false
-
-                            if (result.success) {
-                                preferences.edit()
-                                    .putString("server_url", normalizedUrl)
-                                    .putString("username", username.trim())
-                                    .putString("password", password)
-                                    .apply()
-
-                                statusMessage = "연결 성공: ${result.message}"
-                                onConnectionChanged("연결됨: $normalizedUrl")
-                            } else {
-                                statusMessage = "연결 실패: ${result.message}"
-                            }
+                Text(
+                    text = "입력 중: ${
+                        when (activeField) {
+                            InputField.ServerUrl -> "서버 주소"
+                            InputField.Username -> "사용자 이름"
+                            InputField.Password -> "비밀번호"
                         }
-                    }.start()
-                },
-            )
+                    }",
+                    color = Color(0xFF78B9FF),
+                    fontSize = 15.sp,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
 
-            Spacer(modifier = Modifier.height(1.dp))
+                TvMenuButton(
+                    text = if (isTesting) "연결 확인 중..." else "저장 및 연결 테스트",
+                    enabled = !isTesting,
+                    onClick = {
+                        val normalizedUrl = serverUrl.trim().trimEnd('/')
 
-            TvMenuButton(
-                text = "뒤로 가기",
-                onClick = onBack,
-            )
+                        if (normalizedUrl.isBlank()) {
+                            statusMessage = "서버 주소를 먼저 입력하세요."
+                            return@TvMenuButton
+                        }
+
+                        if (!normalizedUrl.startsWith("http://") &&
+                            !normalizedUrl.startsWith("https://")
+                        ) {
+                            statusMessage = "주소는 http:// 또는 https:// 로 시작해야 합니다."
+                            return@TvMenuButton
+                        }
+
+                        isTesting = true
+                        statusMessage = "TVHeadend 서버에 연결하는 중입니다."
+
+                        Thread {
+                            val result = testTvhConnection(
+                                serverUrl = normalizedUrl,
+                                username = username.trim(),
+                                password = password,
+                            )
+
+                            context.mainExecutor.execute {
+                                isTesting = false
+
+                                if (result.success) {
+                                    preferences.edit()
+                                        .putString("server_url", normalizedUrl)
+                                        .putString("username", username.trim())
+                                        .putString("password", password)
+                                        .apply()
+
+                                    statusMessage = "연결 성공: ${result.message}"
+                                    onConnectionChanged("연결됨: $normalizedUrl")
+                                } else {
+                                    statusMessage = "연결 실패: ${result.message}"
+                                }
+                            }
+                        }.start()
+                    },
+                )
+
+                TvMenuButton(
+                    text = "뒤로 가기",
+                    onClick = onBack,
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(0.58f),
+                verticalArrangement = Arrangement.Top,
+            ) {
+                Text(
+                    text = "리모컨 키보드",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
+
+                TvKeyboard(
+                    mode = keyboardMode,
+                    onModeChange = { keyboardMode = it },
+                    onKeyClick = { appendText(it) },
+                    onBackspace = { deleteLastCharacter() },
+                    onSpace = { appendText(" ") },
+                )
+            }
         }
     }
 }
@@ -374,17 +365,17 @@ private fun SettingFieldButton(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .padding(horizontal = 14.dp, vertical = 5.dp),
         ) {
             Text(
                 text = label,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 color = Color(0xFFB8C6DA),
             )
 
             Text(
                 text = value,
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 color = Color.White,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -478,8 +469,8 @@ private fun KeyboardKey(
     ) {
         Text(
             text = text,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            fontSize = 14.sp,
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
         )
     }
 }
@@ -500,8 +491,8 @@ private fun TvMenuButton(
     ) {
         Text(
             text = text,
-            fontSize = 20.sp,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
+            fontSize = 16.sp,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
         )
     }
 }
