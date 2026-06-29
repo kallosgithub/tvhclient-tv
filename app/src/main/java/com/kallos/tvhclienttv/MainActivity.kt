@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +35,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun TvhClientTvApp() {
+    var testResult by remember { mutableStateOf("리모컨 방향키와 확인 버튼을 테스트합니다.") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -47,14 +53,16 @@ private fun TvhClientTvApp() {
         )
 
         Text(
-            text = "Android TV 전용 버전",
+            text = testResult,
             color = Color(0xFF9AA4B2),
             fontSize = 20.sp,
             modifier = Modifier.padding(top = 14.dp, bottom = 42.dp),
         )
 
         Button(
-            onClick = {},
+            onClick = {
+                testResult = "확인 버튼 입력을 정상적으로 받았습니다."
+            },
             colors = ButtonDefaults.colors(
                 containerColor = Color(0xFF1D6FD8),
                 focusedContainerColor = Color(0xFF4EA1FF),
