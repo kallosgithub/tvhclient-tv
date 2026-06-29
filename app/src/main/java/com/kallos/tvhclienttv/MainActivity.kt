@@ -231,7 +231,7 @@ private fun SettingsScreen(
             horizontalArrangement = Arrangement.spacedBy(26.dp),
         ) {
             Column(
-                modifier = Modifier.width(430.dp),
+                modifier = Modifier.weight(0.35f),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 SettingFieldButton(
@@ -324,7 +324,7 @@ private fun SettingsScreen(
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.weight(0.65f),
                 verticalArrangement = Arrangement.Top,
             ) {
                 Text(
@@ -356,7 +356,7 @@ private fun SettingFieldButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.weight(0.65f),
         colors = ButtonDefaults.colors(
             containerColor = if (selected) Color(0xFF20385C) else Color(0xFF18243A),
             focusedContainerColor = Color(0xFF4EA1FF),
@@ -375,7 +375,7 @@ private fun SettingFieldButton(
 
             Text(
                 text = value,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 color = Color.White,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -417,7 +417,7 @@ private fun TvKeyboard(
     ) {
         rows.forEach { row ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 row.forEach { key ->
                     KeyboardKey(
@@ -429,7 +429,7 @@ private fun TvKeyboard(
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             KeyboardKey(
                 text = "abc",
@@ -463,8 +463,8 @@ private fun KeyboardKey(
     Button(
         onClick = onClick,
         modifier = Modifier
-            .width(38.dp)
-            .height(38.dp),
+            .width(44.dp)
+            .height(44.dp),
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF24334D),
             contentColor = Color.White,
@@ -475,7 +475,7 @@ private fun KeyboardKey(
         Text(
             text = text,
             color = Color.White,
-            fontSize = if (text.length == 1) 17.sp else 10.sp,
+            fontSize = if (text.length == 1) 19.sp else 11.sp,
         )
     }
 }
