@@ -462,16 +462,20 @@ private fun KeyboardKey(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.height(30.dp),
+        modifier = Modifier
+            .width(44.dp)
+            .height(44.dp),
         colors = ButtonDefaults.colors(
-            containerColor = Color(0xFF18243A),
+            containerColor = Color(0xFF24334D),
+            contentColor = Color.White,
             focusedContainerColor = Color(0xFF4EA1FF),
+            focusedContentColor = Color.White,
         ),
     ) {
         Text(
             text = text,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 0.dp),
+            color = Color.White,
+            fontSize = if (text.length == 1) 19.sp else 11.sp,
         )
     }
 }
