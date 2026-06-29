@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.kallos.tvhclienttv"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.kallos.tvhclienttv"
