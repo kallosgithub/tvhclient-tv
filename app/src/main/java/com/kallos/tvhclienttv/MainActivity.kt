@@ -231,7 +231,7 @@ private fun SettingsScreen(
             horizontalArrangement = Arrangement.spacedBy(26.dp),
         ) {
             Column(
-                modifier = Modifier.weight(0.35f),
+                modifier = Modifier.width(330.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 SettingFieldButton(
@@ -324,7 +324,7 @@ private fun SettingsScreen(
             }
 
             Column(
-                modifier = Modifier.weight(0.65f),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.Top,
             ) {
                 Text(
@@ -356,7 +356,7 @@ private fun SettingFieldButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.weight(0.65f),
+        modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.colors(
             containerColor = if (selected) Color(0xFF20385C) else Color(0xFF18243A),
             focusedContainerColor = Color(0xFF4EA1FF),
