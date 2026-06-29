@@ -433,22 +433,27 @@ private fun TvKeyboard(
         ) {
             KeyboardKey(
                 text = "abc",
+                isAction = true,
                 onClick = { onModeChange(KeyboardMode.Lower) },
             )
             KeyboardKey(
                 text = "ABC",
+                isAction = true,
                 onClick = { onModeChange(KeyboardMode.Upper) },
             )
             KeyboardKey(
                 text = "123",
+                isAction = true,
                 onClick = { onModeChange(KeyboardMode.Symbol) },
             )
             KeyboardKey(
                 text = "공백",
+                isAction = true,
                 onClick = onSpace,
             )
             KeyboardKey(
                 text = "지우기",
+                isAction = true,
                 onClick = onBackspace,
             )
         }
@@ -458,12 +463,13 @@ private fun TvKeyboard(
 @Composable
 private fun KeyboardKey(
     text: String,
+    isAction: Boolean = false,
     onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         modifier = Modifier
-            .width(44.dp)
+            .width(if (isAction) 91.dp else 44.dp)
             .height(44.dp),
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF24334D),
@@ -475,7 +481,11 @@ private fun KeyboardKey(
         Text(
             text = text,
             color = Color.White,
-            fontSize = if (text.length == 1) 19.sp else 11.sp,
+            fontSize = when {
+                isAction -> 13.sp
+                text.length == 1 -> 19.sp
+                else -> 11.sp
+            },
         )
     }
 }
