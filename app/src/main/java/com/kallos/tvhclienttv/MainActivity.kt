@@ -486,7 +486,7 @@ private fun ChannelScreen(
 }
 
 @Composable
-private fun ChannelFilterButton(
+fun ChannelFilterButton(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -510,7 +510,7 @@ private fun ChannelFilterButton(
     }
 }
 
-private fun formatChannelNumber(number: String): String {
+fun formatChannelNumber(number: String): String {
     return number.replace(".", "-")
 }
 
@@ -841,7 +841,7 @@ private fun KeyboardKey(
 }
 
 @Composable
-private fun TvMenuButton(
+fun TvMenuButton(
     text: String,
     enabled: Boolean = true,
     onClick: () -> Unit,
