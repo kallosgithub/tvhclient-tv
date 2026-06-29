@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +40,7 @@ import java.net.URL
 private enum class AppScreen {
     Home,
     Settings,
+    Channels,
 }
 
 private enum class InputField {
@@ -86,6 +90,8 @@ private fun TvhClientTvApp() {
     when (screen) {
         AppScreen.Home -> HomeScreen(
             connectionMessage = connectionMessage,
+            hasServer = !preferences.getString("server_url", "").isNullOrBlank(),
+            onOpenChannels = { screen = AppScreen.Channels },
             onOpenSettings = { screen = AppScreen.Settings },
         )
 
@@ -96,12 +102,23 @@ private fun TvhClientTvApp() {
             },
             onBack = { screen = AppScreen.Home },
         )
+
+        AppScreen.Channels -> ChannelScreen(
+            serverUrl = preferences.getString("server_url", "") ?: "",
+            username = preferences.getString("username", "") ?: "",
+            password = preferences.getString("password", "") ?: "",
+            preferences = preferences,
+            onBack = { screen = AppScreen.Home },
+            onOpenSettings = { screen = AppScreen.Settings },
+        )
     }
 }
 
 @Composable
 private fun HomeScreen(
     connectionMessage: String,
+    hasServer: Boolean,
+    onOpenChannels: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     var statusMessage by remember {
@@ -135,7 +152,11 @@ private fun HomeScreen(
         TvMenuButton(
             text = "채널 보기",
             onClick = {
-                statusMessage = "채널 목록은 서버 연결 기능 확인 후 추가합니다."
+                if (hasServer) {
+                    onOpenChannels()
+                } else {
+                    statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
+                }
             },
         )
 
@@ -164,6 +185,298 @@ private fun HomeScreen(
         )
     }
 }
+
+
+@Composable
+private fun ChannelScreen(
+    serverUrl: String,
+    username: String,
+    password: String,
+    preferences: android.content.SharedPreferences,
+    onBack: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    val context = LocalContext.current
+
+    var channels by remember { mutableStateOf<List<TvhChannel>>(emptyList()) }
+    var tags by remember { mutableStateOf<List<TvhTag>>(emptyList()) }
+    var selectedTagId by remember { mutableStateOf<String?>(null) }
+    var showFavoritesOnly by remember { mutableStateOf(false) }
+    var selectedChannel by remember { mutableStateOf<TvhChannel?>(null) }
+    var statusMessage by remember { mutableStateOf("채널 목록을 불러오는 중입니다.") }
+    var isLoading by remember { mutableStateOf(true) }
+
+    var favorites by remember {
+        mutableStateOf(
+            preferences
+                .getStringSet("favorite_channels", emptySet())
+                ?.toMutableSet()
+                ?: mutableSetOf()
+        )
+    }
+
+    fun reloadChannels() {
+        if (serverUrl.isBlank()) {
+            statusMessage = "저장된 서버 주소가 없습니다."
+            isLoading = false
+            return
+        }
+
+        isLoading = true
+        statusMessage = "TVHeadend 채널 목록을 불러오는 중입니다."
+
+        Thread {
+            val result = loadTvhChannels(
+                serverUrl = serverUrl,
+                username = username,
+                password = password,
+            )
+
+            context.mainExecutor.execute {
+                isLoading = false
+
+                if (result.error != null) {
+                    statusMessage = "불러오기 실패: ${result.error}"
+                    return@execute
+                }
+
+                channels = result.channels
+                tags = result.tags
+                statusMessage = "채널 ${result.channels.size}개를 불러왔습니다."
+            }
+        }.start()
+    }
+
+    LaunchedEffect(serverUrl) {
+        reloadChannels()
+    }
+
+    val filteredChannels = channels
+        .filter { channel ->
+            when {
+                showFavoritesOnly -> channel.uuid in favorites
+                selectedTagId != null -> selectedTagId in channel.tagIds
+                else -> true
+            }
+        }
+
+    val selectedIsFavorite = selectedChannel?.uuid in favorites
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0B1020))
+            .padding(horizontal = 38.dp, vertical = 24.dp),
+    ) {
+        Text(
+            text = "채널 보기",
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold,
+        )
+
+        Text(
+            text = statusMessage,
+            color = Color(0xFF9AA4B2),
+            fontSize = 14.sp,
+            modifier = Modifier.padding(top = 6.dp, bottom = 14.dp),
+        )
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Column(
+                modifier = Modifier.width(190.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ChannelFilterButton(
+                    text = "전체 채널",
+                    selected = selectedTagId == null && !showFavoritesOnly,
+                    onClick = {
+                        selectedTagId = null
+                        showFavoritesOnly = false
+                    },
+                )
+
+                ChannelFilterButton(
+                    text = "★ 즐겨찾기",
+                    selected = showFavoritesOnly,
+                    onClick = {
+                        selectedTagId = null
+                        showFavoritesOnly = true
+                    },
+                )
+
+                tags.forEach { tag ->
+                    ChannelFilterButton(
+                        text = tag.name,
+                        selected = selectedTagId == tag.uuid,
+                        onClick = {
+                            selectedTagId = tag.uuid
+                            showFavoritesOnly = false
+                        },
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                TvMenuButton(
+                    text = "새로고침",
+                    enabled = !isLoading,
+                    onClick = { reloadChannels() },
+                )
+
+                TvMenuButton(
+                    text = "뒤로 가기",
+                    onClick = onBack,
+                )
+            }
+
+            Column(
+                modifier = Modifier.width(470.dp),
+            ) {
+                Text(
+                    text = "채널 목록 (${filteredChannels.size})",
+                    color = Color.White,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    items(
+                        items = filteredChannels,
+                        key = { it.uuid },
+                    ) { channel ->
+                        Button(
+                            onClick = {
+                                selectedChannel = channel
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.colors(
+                                containerColor = if (selectedChannel?.uuid == channel.uuid) {
+                                    Color(0xFF20385C)
+                                } else {
+                                    Color(0xFF18243A)
+                                },
+                                focusedContainerColor = Color(0xFF4EA1FF),
+                            ),
+                        ) {
+                            Text(
+                                text = "${formatChannelNumber(channel.number)}  ${channel.name}",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 5.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text(
+                    text = "선택한 채널",
+                    color = Color.White,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                if (selectedChannel == null) {
+                    Text(
+                        text = "채널을 선택하면 정보와 즐겨찾기 버튼이 표시됩니다.",
+                        color = Color(0xFF9AA4B2),
+                        fontSize = 15.sp,
+                    )
+                } else {
+                    Text(
+                        text = "${formatChannelNumber(selectedChannel.number)}  ${selectedChannel.name}",
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    Text(
+                        text = "현재 단계에서는 채널 목록과 즐겨찾기 기능을 확인합니다.",
+                        color = Color(0xFF9AA4B2),
+                        fontSize = 14.sp,
+                    )
+
+                    TvMenuButton(
+                        text = if (selectedIsFavorite) "★ 즐겨찾기 해제" else "☆ 즐겨찾기 추가",
+                        onClick = {
+                            val channel = selectedChannel ?: return@TvMenuButton
+                            val updated = favorites.toMutableSet()
+
+                            if (channel.uuid in updated) {
+                                updated.remove(channel.uuid)
+                            } else {
+                                updated.add(channel.uuid)
+                            }
+
+                            favorites = updated
+
+                            preferences.edit()
+                                .putStringSet("favorite_channels", updated)
+                                .apply()
+                        },
+                    )
+
+                    TvMenuButton(
+                        text = "재생 준비",
+                        onClick = {
+                            statusMessage = "다음 단계에서 TVHeadend 스트림 재생을 연결합니다."
+                        },
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TvMenuButton(
+                    text = "서버 설정",
+                    onClick = onOpenSettings,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChannelFilterButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.colors(
+            containerColor = if (selected) Color(0xFF20385C) else Color(0xFF18243A),
+            focusedContainerColor = Color(0xFF4EA1FF),
+        ),
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 14.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 5.dp),
+        )
+    }
+}
+
+private fun formatChannelNumber(number: String): String {
+    return number.replace(".", "-")
+}
+
 
 @Composable
 private fun SettingsScreen(
