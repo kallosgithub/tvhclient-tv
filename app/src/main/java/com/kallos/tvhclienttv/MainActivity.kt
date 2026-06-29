@@ -210,20 +210,20 @@ private fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0B1020))
-            .padding(horizontal = 48.dp, vertical = 28.dp),
+            .padding(horizontal = 36.dp, vertical = 18.dp),
     ) {
         Text(
             text = "TVHeadend 서버 설정",
             color = Color.White,
-            fontSize = 30.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
         )
 
         Text(
             text = statusMessage,
             color = Color(0xFF9AA4B2),
-            fontSize = 15.sp,
-            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
+            fontSize = 13.sp,
+            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
         )
 
         Row(
@@ -330,9 +330,9 @@ private fun SettingsScreen(
                 Text(
                     text = "리모컨 키보드",
                     color = Color.White,
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 10.dp),
+                    modifier = Modifier.padding(bottom = 4.dp),
                 )
 
                 TvKeyboard(
@@ -413,11 +413,11 @@ private fun TvKeyboard(
     }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         rows.forEach { row ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 row.forEach { key ->
                     KeyboardKey(
@@ -429,7 +429,7 @@ private fun TvKeyboard(
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             KeyboardKey(
                 text = "abc",
@@ -462,6 +462,7 @@ private fun KeyboardKey(
 ) {
     Button(
         onClick = onClick,
+        modifier = Modifier.height(30.dp),
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF18243A),
             focusedContainerColor = Color(0xFF4EA1FF),
@@ -469,8 +470,8 @@ private fun KeyboardKey(
     ) {
         Text(
             text = text,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 0.dp),
         )
     }
 }
