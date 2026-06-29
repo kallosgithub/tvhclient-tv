@@ -207,11 +207,8 @@ private fun ChannelScreen(
     var isLoading by remember { mutableStateOf(true) }
 
     var favorites by remember {
-        mutableStateOf(
-            preferences
-                .getStringSet("favorite_channels", emptySet())
-                ?.toMutableSet()
-                ?: mutableSetOf()
+        mutableStateOf<Set<String>>(
+            preferences.getStringSet("favorite_channels", emptySet())?.toSet() ?: emptySet()
         )
     }
 
@@ -255,12 +252,12 @@ private fun ChannelScreen(
         .filter { channel ->
             when {
                 showFavoritesOnly -> channel.uuid in favorites
-                selectedTagId != null -> selectedTagId in channel.tagIds
+                selectedTagId != null -> selectedTagId?.let { it in channel.tagIds } == true
                 else -> true
             }
         }
 
-    val selectedIsFavorite = selectedChannel?.uuid in favorites
+    val selectedIsFavorite = selectedChannel?.uuid?.let { it in favorites } == true
 
     Column(
         modifier = Modifier
@@ -389,7 +386,9 @@ private fun ChannelScreen(
                     fontWeight = FontWeight.Bold,
                 )
 
-                if (selectedChannel == null) {
+                val selected = selectedChannel
+
+                if (selected == null) {
                     Text(
                         text = "채널을 선택하면 정보와 즐겨찾기 버튼이 표시됩니다.",
                         color = Color(0xFF9AA4B2),
@@ -397,7 +396,7 @@ private fun ChannelScreen(
                     )
                 } else {
                     Text(
-                        text = "${formatChannelNumber(selectedChannel.number)}  ${selectedChannel.name}",
+                        text = "${formatChannelNumber(selected.number)}  ${selected.name}",
                         color = Color.White,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
@@ -412,13 +411,12 @@ private fun ChannelScreen(
                     TvMenuButton(
                         text = if (selectedIsFavorite) "★ 즐겨찾기 해제" else "☆ 즐겨찾기 추가",
                         onClick = {
-                            val channel = selectedChannel ?: return@TvMenuButton
-                            val updated = favorites.toMutableSet()
+                            val updated = HashSet(favorites)
 
-                            if (channel.uuid in updated) {
-                                updated.remove(channel.uuid)
+                            if (selected.uuid in updated) {
+                                updated.remove(selected.uuid)
                             } else {
-                                updated.add(channel.uuid)
+                                updated.add(selected.uuid)
                             }
 
                             favorites = updated
