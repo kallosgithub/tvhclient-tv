@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.TVHClientTV" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">#4EA1FF</item>
+        <item name="android:navigationBarColor">#0B1020</item>
+        <item name="android:windowBackground">#0B1020</item>
+    </style>
+</resources>
