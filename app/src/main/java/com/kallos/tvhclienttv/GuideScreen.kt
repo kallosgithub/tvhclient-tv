@@ -208,7 +208,7 @@ fun GuideScreen(
                     guideStart = guideStart,
                     selected = selectedChannel?.uuid == channel.uuid,
                     onClick = {
-                        selectedChannel = channel
+                        onPlayChannel(channel)
                     },
                 )
             }
