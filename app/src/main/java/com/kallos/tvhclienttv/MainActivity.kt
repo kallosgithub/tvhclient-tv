@@ -186,89 +186,110 @@ private fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0B1020))
-            .padding(horizontal = 72.dp, vertical = 56.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(horizontal = 56.dp, vertical = 30.dp),
         horizontalAlignment = Alignment.Start,
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_tv_launcher),
-            contentDescription = "TVH Client TV 로고",
-            modifier = Modifier
-                .width(72.dp)
-                .height(72.dp)
-                .padding(bottom = 12.dp),
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_tv_launcher),
+                contentDescription = "TVH Client TV 로고",
+                modifier = Modifier
+                    .width(52.dp)
+                    .height(52.dp),
+            )
 
-        Text(
-            text = "TVH Client TV",
-            color = Color.White,
-            fontSize = 42.sp,
-            fontWeight = FontWeight.Bold,
-        )
+            Column(
+                modifier = Modifier.padding(start = 16.dp),
+            ) {
+                Text(
+                    text = "TVH Client TV",
+                    color = Color.White,
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                )
 
-        Text(
-            text = connectionMessage,
-            color = Color(0xFF9AA4B2),
-            fontSize = 18.sp,
-            modifier = Modifier.padding(top = 12.dp),
-        )
+                Text(
+                    text = connectionMessage,
+                    color = Color(0xFF9AA4B2),
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 3.dp),
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(26.dp))
 
-        TvMenuButton(
-            text = "채널 보기",
+        CompactHomeButton(
+            text = "채널 가이드",
             onClick = {
-                if (hasServer) {
-                    onOpenChannels()
-                } else {
-                    statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
-                }
+                if (hasServer) onOpenChannels()
+                else statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
             },
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        TvMenuButton(
-            text = "EPG 편성표",
+        CompactHomeButton(
+            text = "현재 방송 EPG",
             onClick = {
-                if (hasServer) {
-                    onOpenEpg()
-                } else {
-                    statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
-                }
+                if (hasServer) onOpenEpg()
+                else statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
             },
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        TvMenuButton(
+        CompactHomeButton(
             text = "스트림 프로파일",
             onClick = {
-                if (hasServer) {
-                    onOpenProfiles()
-                } else {
-                    statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
-                }
+                if (hasServer) onOpenProfiles()
+                else statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
             },
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        TvMenuButton(
+        CompactHomeButton(
             text = "서버 설정",
             onClick = onOpenSettings,
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         Text(
             text = statusMessage,
             color = Color(0xFF9AA4B2),
-            fontSize = 18.sp,
+            fontSize = 13.sp,
         )
     }
 }
 
+@Composable
+private fun CompactHomeButton(
+    text: String,
+    onClick: () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .width(430.dp)
+            .height(54.dp),
+        colors = ButtonDefaults.colors(
+            containerColor = Color(0xFF18243A),
+            contentColor = Color.White,
+            focusedContainerColor = Color(0xFF4EA1FF),
+            focusedContentColor = Color.White,
+        ),
+    ) {
+        Text(
+            text = text,
+            fontSize = 17.sp,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
 
 @Composable
 private fun ChannelScreen(

@@ -216,7 +216,10 @@ fun loadTvhProfiles(
                 val item = entries.optJSONObject(index) ?: continue
 
                 val uuid = item.optString("uuid")
+                    .ifBlank { item.optString("key") }
+
                 val name = item.optString("name")
+                    .ifBlank { item.optString("val") }
 
                 if (uuid.isNotBlank() && name.isNotBlank()) {
                     add(StreamProfile(uuid, name))
