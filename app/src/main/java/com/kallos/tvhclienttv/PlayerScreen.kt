@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -136,18 +137,21 @@ fun PlayerScreen(
                 }
             },
     ) {
-        AndroidView(
-            factory = {
-                PlayerView(it).apply {
-                    this.player = player
-                    useController = false
-                }
-            },
-            update = {
-                it.player = player
-            },
-            modifier = Modifier.fillMaxSize(),
-        )
+        key(streamUrl) {
+            AndroidView(
+                factory = {
+                    PlayerView(it).apply {
+                        this.player = player
+                        useController = false
+                        setKeepContentOnPlayerReset(false)
+                    }
+                },
+                update = {
+                    it.player = player
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         if (showProfileMenu) {
             Column(
