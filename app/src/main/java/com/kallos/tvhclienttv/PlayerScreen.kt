@@ -18,6 +18,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -50,6 +52,7 @@ fun PlayerScreen(
 
     var profiles by remember { mutableStateOf<List<StreamProfile>>(emptyList()) }
     var showProfileMenu by remember { mutableStateOf(false) }
+    val profileMenuFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(serverUrl, username, password) {
         Thread {
@@ -111,6 +114,12 @@ fun PlayerScreen(
     DisposableEffect(player) {
         onDispose {
             player.release()
+        }
+    }
+
+    LaunchedEffect(showProfileMenu, profiles) {
+        if (showProfileMenu) {
+            profileMenuFocusRequester.requestFocus()
         }
     }
 
@@ -185,12 +194,17 @@ fun PlayerScreen(
                     color = Color.White,
                 )
 
-                profiles.forEach { profile ->
+                profiles.forEachIndexed { index, profile ->
                     TvMenuButton(
                         text = if (profile.uuid == profileId) {
                             "✓ ${profile.name}"
                         } else {
                             profile.name
+                        },
+                        modifier = if (index == 0) {
+                            Modifier.focusRequester(profileMenuFocusRequester)
+                        } else {
+                            Modifier
                         },
                         onClick = {
                             showProfileMenu = false

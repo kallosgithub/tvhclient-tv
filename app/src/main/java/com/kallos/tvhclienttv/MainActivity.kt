@@ -1148,11 +1148,13 @@ private fun KeyboardKey(
 fun TvMenuButton(
     text: String,
     enabled: Boolean = true,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
+        modifier = modifier,
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF18243A),
             contentColor = Color.White,
