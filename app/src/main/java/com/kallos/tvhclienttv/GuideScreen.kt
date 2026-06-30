@@ -331,7 +331,11 @@ fun GuideScreen(
                         mode = searchKeyboardMode,
                         onModeChange = { searchKeyboardMode = it },
                         onKeyClick = { key ->
-                            searchQuery += key
+                            searchQuery = if (searchKeyboardMode == KeyboardMode.Korean) {
+                                appendHangulInput(searchQuery, key)
+                            } else {
+                                searchQuery + key
+                            }
                         },
                         onBackspace = {
                             if (searchQuery.isNotEmpty()) {
@@ -356,7 +360,7 @@ fun GuideScreen(
                         verticalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         items(
-                            items = searchResults.take(2),
+                            items = searchResults,
                             key = { it.uuid },
                         ) { channel ->
                             Button(

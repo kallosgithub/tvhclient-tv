@@ -58,6 +58,7 @@ private enum class InputField {
 enum class KeyboardMode {
     Lower,
     Upper,
+    Korean,
     Symbol,
 }
 
@@ -640,7 +641,9 @@ private fun SettingsScreen(
     val context = LocalContext.current
 
     var serverUrl by remember {
-        mutableStateOf(preferences.getString("server_url", "") ?: "")
+        mutableStateOf(
+            preferences.getString("server_url", "")?.ifBlank { "https://" } ?: "https://"
+        )
     }
     var username by remember {
         mutableStateOf(preferences.getString("username", "") ?: "")
@@ -664,9 +667,37 @@ private fun SettingsScreen(
         }
     }
 
+    fun appendKey(key: String) {
+        when (activeField) {
+            InputField.ServerUrl -> {
+                serverUrl += key
+            }
+
+            InputField.Username -> {
+                username = if (keyboardMode == KeyboardMode.Korean) {
+                    appendHangulInput(username, key)
+                } else {
+                    username + key
+                }
+            }
+
+            InputField.Password -> {
+                password = if (keyboardMode == KeyboardMode.Korean) {
+                    appendHangulInput(password, key)
+                } else {
+                    password + key
+                }
+            }
+        }
+    }
+
     fun deleteLastCharacter() {
         when (activeField) {
-            InputField.ServerUrl -> if (serverUrl.isNotEmpty()) serverUrl = serverUrl.dropLast(1)
+            InputField.ServerUrl -> {
+                if (serverUrl.length > "https://".length) {
+                    serverUrl = serverUrl.dropLast(1)
+                }
+            }
             InputField.Username -> if (username.isNotEmpty()) username = username.dropLast(1)
             InputField.Password -> if (password.isNotEmpty()) password = password.dropLast(1)
         }
@@ -739,7 +770,13 @@ private fun SettingsScreen(
                     text = if (isTesting) "연결 확인 중..." else "저장 및 연결 테스트",
                     enabled = !isTesting,
                     onClick = {
-                        val normalizedUrl = serverUrl.trim().trimEnd('/')
+                        val typedUrl = serverUrl.trim()
+                        val normalizedUrl = when {
+                            typedUrl.isBlank() || typedUrl == "https://" -> ""
+                            typedUrl.startsWith("https://") -> typedUrl.trimEnd('/')
+                            typedUrl.startsWith("http://") -> typedUrl.trimEnd('/')
+                            else -> "https://${typedUrl.trimEnd('/')}"
+                        }
 
                         if (normalizedUrl.isBlank()) {
                             statusMessage = "서버 주소를 먼저 입력하세요."
@@ -749,7 +786,7 @@ private fun SettingsScreen(
                         if (!normalizedUrl.startsWith("http://") &&
                             !normalizedUrl.startsWith("https://")
                         ) {
-                            statusMessage = "주소는 http:// 또는 https:// 로 시작해야 합니다."
+                            statusMessage = "주소를 확인하세요. 기본값은 https:// 입니다."
                             return@TvMenuButton
                         }
 
@@ -804,7 +841,7 @@ private fun SettingsScreen(
                 TvKeyboard(
                     mode = keyboardMode,
                     onModeChange = { keyboardMode = it },
-                    onKeyClick = { appendText(it) },
+                    onKeyClick = { appendKey(it) },
                     onBackspace = { deleteLastCharacter() },
                     onSpace = { appendText(" ") },
                 )
@@ -872,6 +909,13 @@ fun TvKeyboard(
             listOf("4", "5", "6", "7", "8", "9", ".", ":", "/", "-"),
         )
 
+        KeyboardMode.Korean -> listOf(
+            listOf("ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅎ"),
+            listOf("ㅋ", "ㅌ", "ㅍ", "ㅊ", "ㄲ", "ㄸ", "ㅃ", "ㅆ", "ㅉ"),
+            listOf("ㅏ", "ㅑ", "ㅓ", "ㅕ", "ㅗ", "ㅛ", "ㅜ", "ㅠ", "ㅡ", "ㅣ"),
+            listOf("ㅐ", "ㅔ", "ㅚ", "ㅟ", "ㅢ", "ㅘ", "ㅝ", "ㅖ", "ㅒ"),
+        )
+
         KeyboardMode.Symbol -> listOf(
             listOf(":", "/", ".", "-", "_", "@", "?", "&", "=", "%"),
             listOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
@@ -908,6 +952,11 @@ fun TvKeyboard(
                 onClick = { onModeChange(KeyboardMode.Upper) },
             )
             KeyboardKey(
+                text = "한글",
+                isAction = true,
+                onClick = { onModeChange(KeyboardMode.Korean) },
+            )
+            KeyboardKey(
                 text = "123",
                 isAction = true,
                 onClick = { onModeChange(KeyboardMode.Symbol) },
@@ -935,7 +984,7 @@ private fun KeyboardKey(
     Button(
         onClick = onClick,
         modifier = Modifier
-            .width(if (isAction) 91.dp else 44.dp)
+            .width(if (isAction) 75.dp else 44.dp)
             .height(44.dp),
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF24334D),
