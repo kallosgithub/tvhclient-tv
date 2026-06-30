@@ -184,116 +184,196 @@ private fun HomeScreen(
     onOpenSettings: () -> Unit,
 ) {
     var statusMessage by remember {
-        mutableStateOf("리모컨으로 메뉴를 선택하세요.")
+        mutableStateOf("리모컨의 방향키로 메뉴를 선택하세요.")
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0B1020))
-            .padding(horizontal = 56.dp, vertical = 30.dp),
-        horizontalAlignment = Alignment.Start,
+            .background(Color(0xFF050C17))
+            .padding(horizontal = 38.dp, vertical = 30.dp),
     ) {
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(230.dp)
+                .background(Color(0xFF071722))
+                .padding(horizontal = 44.dp, vertical = 26.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_tv_launcher),
-                contentDescription = "TVH Client TV 로고",
+                contentDescription = "TVH Client TV",
                 modifier = Modifier
-                    .width(52.dp)
-                    .height(52.dp),
+                    .width(132.dp)
+                    .height(132.dp),
             )
 
             Column(
-                modifier = Modifier.padding(start = 16.dp),
+                modifier = Modifier.padding(start = 30.dp),
             ) {
                 Text(
-                    text = "TVH Client TV",
+                    text = "TVH",
                     color = Color.White,
-                    fontSize = 30.sp,
+                    fontSize = 52.sp,
                     fontWeight = FontWeight.Bold,
                 )
 
                 Text(
-                    text = connectionMessage,
-                    color = Color(0xFF9AA4B2),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 3.dp),
+                    text = "CLIENT TV",
+                    color = Color(0xFF24D7A3),
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+
+                Text(
+                    text = "TVHeadend 채널과 편성표를 한 화면에서",
+                    color = Color(0xFFB7C7D8),
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(top = 14.dp),
+                )
+            }
+
+            Spacer(modifier = Modifier.width(120.dp))
+
+            Column(
+                modifier = Modifier.padding(top = 16.dp),
+            ) {
+                Text(
+                    text = if (hasServer) "● 서버 연결됨" else "● 서버 미설정",
+                    color = if (hasServer) Color(0xFF24D7A3) else Color(0xFFFFA94D),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Text(
+                    text = connectionMessage
+                        .replace("연결됨: ", "")
+                        .replace("저장된 서버: ", ""),
+                    color = Color(0xFFB7C7D8),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 8.dp),
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(26.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        CompactHomeButton(
-            text = "채널 가이드",
-            onClick = {
-                if (hasServer) onOpenChannels()
-                else statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
-            },
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            HomeMenuCard(
+                icon = "▦",
+                title = "채널",
+                subtitle = "채널 목록과 TV 가이드",
+                accent = Color(0xFF24D7A3),
+                onClick = {
+                    if (hasServer) {
+                        onOpenChannels()
+                    } else {
+                        statusMessage = "먼저 설정에서 서버를 연결하세요."
+                    }
+                },
+            )
 
-        Spacer(modifier = Modifier.height(10.dp))
+            HomeMenuCard(
+                icon = "▤",
+                title = "편성표",
+                subtitle = "현재 방송 EPG",
+                accent = Color(0xFF2FA7FF),
+                onClick = {
+                    if (hasServer) {
+                        onOpenEpg()
+                    } else {
+                        statusMessage = "먼저 설정에서 서버를 연결하세요."
+                    }
+                },
+            )
 
-        CompactHomeButton(
-            text = "현재 방송 EPG",
-            onClick = {
-                if (hasServer) onOpenEpg()
-                else statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
-            },
-        )
+            HomeMenuCard(
+                icon = "▶",
+                title = "스트림",
+                subtitle = "스트림 프로파일 관리",
+                accent = Color(0xFF7968FF),
+                onClick = {
+                    if (hasServer) {
+                        onOpenProfiles()
+                    } else {
+                        statusMessage = "먼저 설정에서 서버를 연결하세요."
+                    }
+                },
+            )
 
-        Spacer(modifier = Modifier.height(10.dp))
+            HomeMenuCard(
+                icon = "⚙",
+                title = "설정",
+                subtitle = "서버와 앱 설정",
+                accent = Color(0xFF9CB7D9),
+                onClick = onOpenSettings,
+            )
+        }
 
-        CompactHomeButton(
-            text = "스트림 프로파일",
-            onClick = {
-                if (hasServer) onOpenProfiles()
-                else statusMessage = "먼저 서버 설정에서 TVHeadend 서버를 연결하세요."
-            },
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        CompactHomeButton(
-            text = "서버 설정",
-            onClick = onOpenSettings,
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = statusMessage,
-            color = Color(0xFF9AA4B2),
-            fontSize = 13.sp,
+            color = Color(0xFFB7C7D8),
+            fontSize = 15.sp,
         )
     }
 }
 
 @Composable
-private fun CompactHomeButton(
-    text: String,
+private fun HomeMenuCard(
+    icon: String,
+    title: String,
+    subtitle: String,
+    accent: Color,
     onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         modifier = Modifier
-            .width(430.dp)
-            .height(54.dp),
+            .width(260.dp)
+            .height(300.dp),
         colors = ButtonDefaults.colors(
-            containerColor = Color(0xFF18243A),
+            containerColor = Color(0xFF0C1A2A),
             contentColor = Color.White,
-            focusedContainerColor = Color(0xFF4EA1FF),
+            focusedContainerColor = Color(0xFF123A4E),
             focusedContentColor = Color.White,
         ),
     ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 20.sp,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = icon,
+                color = accent,
+                fontSize = 62.sp,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 20.dp),
+            )
+
+            Text(
+                text = subtitle,
+                color = Color(0xFFB7C7D8),
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+        }
     }
 }
 
