@@ -1,6 +1,7 @@
 package com.kallos.tvhclienttv
 
 import android.util.Base64
+import android.view.KeyEvent as AndroidKeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -144,6 +145,24 @@ fun PlayerScreen(
                         this.player = player
                         useController = false
                         setKeepContentOnPlayerReset(false)
+                        isFocusable = true
+                        isFocusableInTouchMode = true
+
+                        setOnKeyListener { _, keyCode, event ->
+                            if (
+                                event.action == AndroidKeyEvent.ACTION_DOWN &&
+                                (
+                                    keyCode == AndroidKeyEvent.KEYCODE_DPAD_CENTER ||
+                                    keyCode == AndroidKeyEvent.KEYCODE_ENTER ||
+                                    keyCode == AndroidKeyEvent.KEYCODE_MENU
+                                )
+                            ) {
+                                showProfileMenu = true
+                                true
+                            } else {
+                                false
+                            }
+                        }
                     }
                 },
                 update = {
