@@ -33,6 +33,15 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private val GuideBackground = Color(0xFF0B1020)
+private val GuidePanel = Color(0xFF131E31)
+private val GuidePanelSoft = Color(0xFF18263B)
+private val GuideProgram = Color(0xFF1D3854)
+private val GuideNowProgram = Color(0xFF137B7B)
+private val GuideSelected = Color(0xFF1B4265)
+private val GuideFocus = Color(0xFF2D9CDB)
+private val GuideSubText = Color(0xFF9EADC2)
+
 @Composable
 fun GuideScreen(
     serverUrl: String,
@@ -52,26 +61,23 @@ fun GuideScreen(
     var selectedTagId by remember { mutableStateOf<String?>(null) }
     var selectedChannel by remember { mutableStateOf<TvhChannel?>(null) }
 
-    var isLoading by remember { mutableStateOf(true) }
-    var statusMessage by remember { mutableStateOf("TV 가이드를 불러오는 중입니다.") }
+    var statusMessage by remember {
+        mutableStateOf("TV 가이드를 불러오는 중입니다.")
+    }
 
     fun reloadGuide() {
         if (serverUrl.isBlank()) {
-            isLoading = false
             statusMessage = "서버 주소가 없습니다."
             return
         }
 
-        isLoading = true
-        statusMessage = "채널과 EPG 정보를 불러오는 중입니다."
+        statusMessage = "채널과 편성표를 불러오는 중입니다."
 
         Thread {
             val channelResult = loadTvhChannels(serverUrl, username, password)
             val epgResult = loadGuideEpg(serverUrl, username, password)
 
             context.mainExecutor.execute {
-                isLoading = false
-
                 if (channelResult.error != null) {
                     statusMessage = "채널 불러오기 실패: ${channelResult.error}"
                     return@execute
@@ -85,7 +91,7 @@ fun GuideScreen(
                 channels = channelResult.channels
                 tags = channelResult.tags
                 events = epgResult.events
-                statusMessage = "채널 ${channels.size}개 · EPG ${events.size}개"
+                statusMessage = "채널 ${channels.size}개 · 편성표 ${events.size}개"
             }
         }.start()
     }
@@ -106,7 +112,7 @@ fun GuideScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0B1020))
+            .background(GuideBackground)
             .padding(horizontal = 28.dp, vertical = 20.dp),
     ) {
         Row(
@@ -122,13 +128,13 @@ fun GuideScreen(
 
             Text(
                 text = statusMessage,
-                color = Color(0xFF9AA4B2),
+                color = GuideSubText,
                 fontSize = 13.sp,
-                modifier = Modifier.padding(start = 16.dp),
+                modifier = Modifier.padding(start = 14.dp),
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -139,7 +145,7 @@ fun GuideScreen(
                 onClick = { selectedTagId = null },
             )
 
-            tags.take(8).forEach { tag ->
+            tags.take(5).forEach { tag ->
                 GuideTagButton(
                     text = tag.name,
                     selected = selectedTagId == tag.uuid,
@@ -154,24 +160,31 @@ fun GuideScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GuidePanel)
+                .padding(vertical = 10.dp),
         ) {
             Text(
                 text = "채널",
-                color = Color(0xFFB8C6DA),
-                fontSize = 14.sp,
-                modifier = Modifier.width(270.dp),
+                color = GuideSubText,
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .width(250.dp)
+                    .padding(start = 14.dp),
             )
 
             repeat(4) { index ->
                 Text(
                     text = formatGuideTime(guideStart + (index * 1800L)),
-                    color = Color(0xFFB8C6DA),
-                    fontSize = 14.sp,
-                    modifier = Modifier.width(250.dp),
+                    color = GuideSubText,
+                    fontSize = 13.sp,
+                    modifier = Modifier
+                        .width(200.dp)
+                        .padding(start = 10.dp),
                 )
             }
         }
@@ -181,8 +194,8 @@ fun GuideScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(690.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                .height(610.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             items(
                 items = filteredChannels,
@@ -201,22 +214,26 @@ fun GuideScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         val selected = selectedChannel
 
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GuidePanel)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
                 text = selected?.let {
                     "${formatChannelNumber(it.number)}  ${it.name}"
                 } ?: "채널을 선택하세요.",
                 color = Color.White,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.width(420.dp),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.width(360.dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -230,12 +247,12 @@ fun GuideScreen(
             )
 
             TvMenuButton(
-                text = "서버 설정",
+                text = "설정",
                 onClick = onOpenSettings,
             )
 
             TvMenuButton(
-                text = "뒤로 가기",
+                text = "뒤로",
                 onClick = onBack,
             )
         }
@@ -251,11 +268,11 @@ private fun GuideTagButton(
     Button(
         onClick = onClick,
         modifier = Modifier
-            .width(116.dp)
-            .height(40.dp),
+            .width(118.dp)
+            .height(38.dp),
         colors = ButtonDefaults.colors(
-            containerColor = if (selected) Color(0xFF28547E) else Color(0xFF18243A),
-            focusedContainerColor = Color(0xFF4EA1FF),
+            containerColor = if (selected) GuideSelected else GuidePanel,
+            focusedContainerColor = GuideFocus,
         ),
     ) {
         Text(
@@ -287,10 +304,10 @@ private fun GuideChannelRow(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(62.dp),
+            .height(58.dp),
         colors = ButtonDefaults.colors(
-            containerColor = if (selected) Color(0xFF274D6D) else Color(0xFF111B2B),
-            focusedContainerColor = Color(0xFF2E9BD6),
+            containerColor = if (selected) GuideSelected else GuidePanelSoft,
+            focusedContainerColor = GuideFocus,
         ),
     ) {
         Row(
@@ -298,7 +315,9 @@ private fun GuideChannelRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                modifier = Modifier.width(270.dp),
+                modifier = Modifier
+                    .width(250.dp)
+                    .padding(start = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ChannelLogo(
@@ -309,7 +328,7 @@ private fun GuideChannelRow(
                 Text(
                     text = "${formatChannelNumber(channel.number)}  ${channel.name}",
                     color = Color.White,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     modifier = Modifier.padding(start = 10.dp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -318,43 +337,50 @@ private fun GuideChannelRow(
 
             repeat(4) { slot ->
                 val slotStart = guideStart + (slot * 1800L)
+
                 val event = channelEvents.firstOrNull {
                     it.start <= slotStart && it.stop > slotStart
                 }
 
+                val nowSeconds = System.currentTimeMillis() / 1000L
+
                 val isNow = event != null &&
-                    event.start <= (System.currentTimeMillis() / 1000L) &&
-                    event.stop > (System.currentTimeMillis() / 1000L)
+                    event.start <= nowSeconds &&
+                    event.stop > nowSeconds
+
+                val showTitle = event != null &&
+                    (
+                        slot == 0 ||
+                        event.start >= slotStart
+                    )
 
                 Column(
                     modifier = Modifier
-                        .width(250.dp)
-                        .height(50.dp)
+                        .width(200.dp)
+                        .height(44.dp)
                         .background(
                             when {
-                                isNow -> Color(0xFF146E74)
-                                event != null -> Color(0xFF263B57)
-                                else -> Color(0xFF18243A)
+                                isNow -> GuideNowProgram
+                                event != null -> GuideProgram
+                                else -> GuidePanel
                             }
                         )
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
-                    if (event != null) {
+                    if (event != null && showTitle) {
                         Text(
-                            text = if (slotStart == event.start || slot == 0) event.title else "계속",
+                            text = event.title,
                             color = Color.White,
                             fontSize = 13.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
 
-                        if (slotStart == event.start || slot == 0) {
-                            Text(
-                                text = "${formatGuideTime(event.start)} ~ ${formatGuideTime(event.stop)}",
-                                color = Color(0xFFB8C6DA),
-                                fontSize = 11.sp,
-                            )
-                        }
+                        Text(
+                            text = "${formatGuideTime(event.start)} ~ ${formatGuideTime(event.stop)}",
+                            color = Color(0xFFD0DEEA),
+                            fontSize = 10.sp,
+                        )
                     }
                 }
             }
