@@ -25,8 +25,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.tv.material3.Button
+import androidx.tv.material3.ButtonDefaults
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private val EpgBackground = Color(0xFF0B1020)
+private val EpgCard = Color(0xFF18263B)
+private val EpgInfoCard = Color(0xFF121E31)
+private val EpgFocus = Color(0xFF2D9CDB)
+private val EpgSubText = Color(0xFFB8C6DA)
+private val EpgNow = Color(0xFF177E7E)
 
 @Composable
 fun EpgScreen(
@@ -35,6 +48,7 @@ fun EpgScreen(
     password: String,
     preferences: SharedPreferences,
     onBack: () -> Unit,
+    onPlayChannel: (TvhChannel) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -72,7 +86,7 @@ fun EpgScreen(
                 }
 
                 channels = channelResult.channels
-                events = epgResult.events
+                events = epgResult.events.sortedBy { it.channelUuid }
                 statusMessage = "현재 방송 ${events.size}개"
             }
         }.start()
@@ -82,8 +96,13 @@ fun EpgScreen(
         reload()
     }
 
-    fun channelName(channelUuid: String): String {
-        val channel = channels.firstOrNull { it.uuid == channelUuid }
+    fun findChannel(event: TvhEpgEvent): TvhChannel? {
+        return channels.firstOrNull { it.uuid == event.channelUuid }
+    }
+
+    fun channelTitle(event: TvhEpgEvent): String {
+        val channel = findChannel(event)
+
         return if (channel == null) {
             "알 수 없는 채널"
         } else {
@@ -94,102 +113,211 @@ fun EpgScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0B1020))
-            .padding(horizontal = 38.dp, vertical = 24.dp),
+            .background(EpgBackground)
+            .padding(horizontal = 34.dp, vertical = 24.dp),
     ) {
-        Text(
-            text = "현재 방송 EPG",
-            color = Color.White,
-            fontSize = 30.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "현재 방송 EPG",
+                color = Color.White,
+                fontSize = 29.sp,
+                fontWeight = FontWeight.Bold,
+            )
 
-        Text(
-            text = statusMessage,
-            color = Color(0xFF9AA4B2),
-            fontSize = 14.sp,
-            modifier = Modifier.padding(top = 6.dp, bottom = 14.dp),
-        )
+            Text(
+                text = statusMessage,
+                color = EpgSubText,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(start = 16.dp),
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            TvMenuButton(
+                text = if (isLoading) "불러오는 중" else "새로고침",
+                enabled = !isLoading,
+                onClick = { reload() },
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            TvMenuButton(
+                text = "뒤로 가기",
+                onClick = onBack,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(
             modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             Column(
                 modifier = Modifier.width(620.dp),
             ) {
+                Text(
+                    text = "방송 중인 채널",
+                    color = Color.White,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
+
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
                     items(
                         items = events,
                         key = { "${it.channelUuid}_${it.start}_${it.title}" },
                     ) { event ->
-                        TvMenuButton(
-                            text = "${channelName(event.channelUuid)}  |  ${event.title}",
+                        val channel = findChannel(event)
+
+                        Button(
                             onClick = {
-                                selectedEvent = event
+                                channel?.let(onPlayChannel)
                             },
-                        )
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(66.dp),
+                            colors = ButtonDefaults.colors(
+                                containerColor = EpgCard,
+                                focusedContainerColor = EpgFocus,
+                            ),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (channel != null) {
+                                    ChannelLogo(
+                                        serverUrl = serverUrl,
+                                        iconPath = channel.iconUrl,
+                                    )
+                                }
+
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 12.dp),
+                                ) {
+                                    Text(
+                                        text = channelTitle(event),
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+
+                                    Text(
+                                        text = event.title,
+                                        color = EpgSubText,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(top = 3.dp),
+                                    )
+                                }
+
+                                Text(
+                                    text = "재생",
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
                     }
                 }
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(EpgInfoCard)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Text(
-                    text = "방송 정보",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    text = "현재 방송",
+                    color = EpgSubText,
+                    fontSize = 15.sp,
                 )
 
-                if (selectedEvent == null) {
+                val event = selectedEvent
+
+                if (event == null) {
                     Text(
-                        text = "왼쪽 목록에서 방송을 선택하세요.",
-                        color = Color(0xFF9AA4B2),
-                        fontSize = 15.sp,
+                        text = "왼쪽 채널을 누르면 바로 재생됩니다.",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
                     )
-                } else {
-                    val event = selectedEvent!!
 
                     Text(
-                        text = channelName(event.channelUuid),
-                        color = Color(0xFF78B9FF),
-                        fontSize = 17.sp,
+                        text = "리모컨 방향키로 채널을 선택하고 확인 버튼을 누르세요.",
+                        color = EpgSubText,
+                        fontSize = 14.sp,
+                    )
+                } else {
+                    val channel = findChannel(event)
+
+                    if (channel != null) {
+                        ChannelLogo(
+                            serverUrl = serverUrl,
+                            iconPath = channel.iconUrl,
+                        )
+                    }
+
+                    Text(
+                        text = channelTitle(event),
+                        color = Color(0xFF70C7FF),
+                        fontSize = 16.sp,
                     )
 
                     Text(
                         text = event.title,
                         color = Color.White,
-                        fontSize = 24.sp,
+                        fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
+                    )
+
+                    Text(
+                        text = "${formatEpgTime(event.start)} ~ ${formatEpgTime(event.stop)}",
+                        color = EpgSubText,
+                        fontSize = 14.sp,
                     )
 
                     if (event.subtitle.isNotBlank()) {
                         Text(
                             text = event.subtitle,
-                            color = Color(0xFFB8C6DA),
-                            fontSize = 16.sp,
+                            color = EpgSubText,
+                            fontSize = 15.sp,
                         )
                     }
+
+                    TvMenuButton(
+                        text = "이 채널 재생",
+                        enabled = channel != null,
+                        onClick = {
+                            channel?.let(onPlayChannel)
+                        },
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                TvMenuButton(
-                    text = if (isLoading) "불러오는 중..." else "새로고침",
-                    enabled = !isLoading,
-                    onClick = { reload() },
-                )
-
-                TvMenuButton(
-                    text = "뒤로 가기",
-                    onClick = onBack,
-                )
             }
         }
     }
+}
+
+private fun formatEpgTime(seconds: Long): String {
+    return SimpleDateFormat(
+        "HH:mm",
+        Locale.KOREA,
+    ).format(Date(seconds * 1000L))
 }

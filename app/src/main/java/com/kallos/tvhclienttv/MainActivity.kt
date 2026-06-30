@@ -135,6 +135,10 @@ private fun TvhClientTvApp() {
             password = preferences.getString("password", "") ?: "",
             preferences = preferences,
             onBack = { screen = AppScreen.Home },
+            onPlayChannel = { channel ->
+                playerChannel = channel
+                screen = AppScreen.Player
+            },
         )
 
         AppScreen.Profiles -> ProfileScreen(
