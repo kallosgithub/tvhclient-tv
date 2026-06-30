@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -187,62 +189,83 @@ private fun HomeScreen(
         mutableStateOf("리모컨의 방향키로 메뉴를 선택하세요.")
     }
 
+    val background = Color(0xFF050B14)
+    val banner = Color(0xFF071824)
+    val panel = Color(0xFF0B1727)
+    val panelFocused = Color(0xFF10343E)
+    val teal = Color(0xFF1FE0B4)
+    val blue = Color(0xFF2EA8FF)
+    val softText = Color(0xFFB7C7D8)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF050C17))
-            .padding(horizontal = 38.dp, vertical = 30.dp),
+            .background(background)
+            .padding(horizontal = 32.dp, vertical = 26.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(230.dp)
-                .background(Color(0xFF071722))
-                .padding(horizontal = 44.dp, vertical = 26.dp),
+                .height(206.dp)
+                .background(
+                    color = banner,
+                    shape = RoundedCornerShape(18.dp),
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFF154355),
+                    shape = RoundedCornerShape(18.dp),
+                )
+                .padding(horizontal = 38.dp, vertical = 24.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_tv_launcher),
                 contentDescription = "TVH Client TV",
                 modifier = Modifier
-                    .width(132.dp)
-                    .height(132.dp),
+                    .width(106.dp)
+                    .height(106.dp),
             )
 
             Column(
-                modifier = Modifier.padding(start = 30.dp),
+                modifier = Modifier.padding(start = 28.dp),
             ) {
                 Text(
                     text = "TVH",
                     color = Color.White,
-                    fontSize = 52.sp,
+                    fontSize = 48.sp,
                     fontWeight = FontWeight.Bold,
                 )
 
                 Text(
                     text = "CLIENT TV",
-                    color = Color(0xFF24D7A3),
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 2.dp),
+                    color = teal,
+                    fontSize = 23.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 1.dp),
                 )
 
                 Text(
                     text = "TVHeadend 채널과 편성표를 한 화면에서",
-                    color = Color(0xFFB7C7D8),
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(top = 14.dp),
+                    color = softText,
+                    fontSize = 15.sp,
+                    modifier = Modifier.padding(top = 12.dp),
                 )
             }
 
             Spacer(modifier = Modifier.width(120.dp))
 
             Column(
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier
+                    .background(
+                        color = Color(0xFF0B2130),
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .padding(horizontal = 22.dp, vertical = 16.dp),
             ) {
                 Text(
                     text = if (hasServer) "● 서버 연결됨" else "● 서버 미설정",
-                    color = if (hasServer) Color(0xFF24D7A3) else Color(0xFFFFA94D),
+                    color = if (hasServer) teal else Color(0xFFFFB347),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -251,127 +274,158 @@ private fun HomeScreen(
                     text = connectionMessage
                         .replace("연결됨: ", "")
                         .replace("저장된 서버: ", ""),
-                    color = Color(0xFFB7C7D8),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(top = 8.dp),
+                    color = softText,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 7.dp),
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row(
+        BoxWithConstraints(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            HomeMenuCard(
-                icon = "▦",
-                title = "채널",
-                subtitle = "채널 목록과 TV 가이드",
-                accent = Color(0xFF24D7A3),
-                onClick = {
-                    if (hasServer) {
-                        onOpenChannels()
-                    } else {
-                        statusMessage = "먼저 설정에서 서버를 연결하세요."
-                    }
-                },
-            )
+            val gap = 14.dp
+            val cardWidth = (maxWidth - gap * 3) / 4
 
-            HomeMenuCard(
-                icon = "▤",
-                title = "편성표",
-                subtitle = "현재 방송 EPG",
-                accent = Color(0xFF2FA7FF),
-                onClick = {
-                    if (hasServer) {
-                        onOpenEpg()
-                    } else {
-                        statusMessage = "먼저 설정에서 서버를 연결하세요."
-                    }
-                },
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(gap),
+            ) {
+                HomeDashboardCard(
+                    width = cardWidth,
+                    icon = "▦",
+                    title = "채널",
+                    subtitle = "채널 목록과 TV 가이드",
+                    accent = teal,
+                    panel = panel,
+                    panelFocused = panelFocused,
+                    onClick = {
+                        if (hasServer) {
+                            onOpenChannels()
+                        } else {
+                            statusMessage = "먼저 설정에서 서버를 연결하세요."
+                        }
+                    },
+                )
 
-            HomeMenuCard(
-                icon = "▶",
-                title = "스트림",
-                subtitle = "스트림 프로파일 관리",
-                accent = Color(0xFF7968FF),
-                onClick = {
-                    if (hasServer) {
-                        onOpenProfiles()
-                    } else {
-                        statusMessage = "먼저 설정에서 서버를 연결하세요."
-                    }
-                },
-            )
+                HomeDashboardCard(
+                    width = cardWidth,
+                    icon = "▤",
+                    title = "편성표",
+                    subtitle = "현재 방송 EPG",
+                    accent = blue,
+                    panel = panel,
+                    panelFocused = panelFocused,
+                    onClick = {
+                        if (hasServer) {
+                            onOpenEpg()
+                        } else {
+                            statusMessage = "먼저 설정에서 서버를 연결하세요."
+                        }
+                    },
+                )
 
-            HomeMenuCard(
-                icon = "⚙",
-                title = "설정",
-                subtitle = "서버와 앱 설정",
-                accent = Color(0xFF9CB7D9),
-                onClick = onOpenSettings,
-            )
+                HomeDashboardCard(
+                    width = cardWidth,
+                    icon = "▶",
+                    title = "스트림",
+                    subtitle = "스트림 프로파일 관리",
+                    accent = Color(0xFF8372FF),
+                    panel = panel,
+                    panelFocused = panelFocused,
+                    onClick = {
+                        if (hasServer) {
+                            onOpenProfiles()
+                        } else {
+                            statusMessage = "먼저 설정에서 서버를 연결하세요."
+                        }
+                    },
+                )
+
+                HomeDashboardCard(
+                    width = cardWidth,
+                    icon = "⚙",
+                    title = "설정",
+                    subtitle = "서버와 앱 설정",
+                    accent = Color(0xFF9CB8DA),
+                    panel = panel,
+                    panelFocused = panelFocused,
+                    onClick = onOpenSettings,
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = statusMessage,
-            color = Color(0xFFB7C7D8),
+            color = softText,
             fontSize = 15.sp,
         )
     }
 }
 
 @Composable
-private fun HomeMenuCard(
+private fun HomeDashboardCard(
+    width: androidx.compose.ui.unit.Dp,
     icon: String,
     title: String,
     subtitle: String,
     accent: Color,
+    panel: Color,
+    panelFocused: Color,
     onClick: () -> Unit,
 ) {
-    Button(
+    var focused by remember { mutableStateOf(false) }
+
+    androidx.compose.material3.Button(
         onClick = onClick,
         modifier = Modifier
-            .width(260.dp)
-            .height(300.dp),
-        colors = ButtonDefaults.colors(
-            containerColor = Color(0xFF0C1A2A),
+            .width(width)
+            .height(248.dp)
+            .onFocusChanged {
+                focused = it.isFocused
+            }
+            .border(
+                width = if (focused) 2.dp else 1.dp,
+                color = if (focused) accent else Color(0xFF18334A),
+                shape = RoundedCornerShape(18.dp),
+            ),
+        shape = RoundedCornerShape(18.dp),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = if (focused) panelFocused else panel,
             contentColor = Color.White,
-            focusedContainerColor = Color(0xFF123A4E),
-            focusedContentColor = Color.White,
         ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 24.dp),
+                .padding(horizontal = 18.dp, vertical = 22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = icon,
                 color = accent,
-                fontSize = 62.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 48.sp,
+                fontWeight = FontWeight.SemiBold,
             )
 
             Text(
                 text = title,
                 color = Color.White,
-                fontSize = 28.sp,
+                fontSize = 27.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(top = 20.dp),
+                modifier = Modifier.padding(top = 18.dp),
             )
 
             Text(
                 text = subtitle,
                 color = Color(0xFFB7C7D8),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(top = 10.dp),
+                fontSize = 13.sp,
+                modifier = Modifier.padding(top = 9.dp),
             )
         }
     }
