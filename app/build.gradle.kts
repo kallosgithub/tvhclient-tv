@@ -45,6 +45,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     implementation("androidx.tv:tv-material:1.0.1")
     implementation("androidx.tv:tv-foundation:1.0.0")

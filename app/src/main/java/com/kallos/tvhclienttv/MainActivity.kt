@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,9 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import androidx.tv.material3.Button
 import androidx.tv.material3.ButtonDefaults
 import java.net.HttpURLConnection
@@ -77,6 +80,9 @@ private fun TvhClientTvApp() {
 
     var screen by remember { mutableStateOf(AppScreen.Home) }
     var playerChannel by remember { mutableStateOf<TvhChannel?>(null) }
+    var playerProfileId by remember {
+        mutableStateOf(preferences.getString("stream_profile", "pass") ?: "pass")
+    }
     var connectionMessage by remember {
         mutableStateOf(
             if (preferences.getString("server_url", "").isNullOrBlank()) {
@@ -149,7 +155,13 @@ private fun TvhClientTvApp() {
                     serverUrl = preferences.getString("server_url", "") ?: "",
                     username = preferences.getString("username", "") ?: "",
                     password = preferences.getString("password", "") ?: "",
-                    profileId = preferences.getString("stream_profile", "pass") ?: "pass",
+                    profileId = playerProfileId,
+                    onProfileSelected = { profileId ->
+                        playerProfileId = profileId
+                        preferences.edit()
+                            .putString("stream_profile", profileId)
+                            .apply()
+                    },
                     onBack = { screen = AppScreen.Channels },
                 )
             }
@@ -178,6 +190,15 @@ private fun HomeScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start,
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_tv_launcher),
+            contentDescription = "TVH Client TV 로고",
+            modifier = Modifier
+                .width(72.dp)
+                .height(72.dp)
+                .padding(bottom = 12.dp),
+        )
+
         Text(
             text = "TVH Client TV",
             color = Color.White,
@@ -425,14 +446,24 @@ private fun ChannelScreen(
                                 focusedContainerColor = Color(0xFF4EA1FF),
                             ),
                         ) {
-                            Text(
-                                text = "${formatChannelNumber(channel.number)}  ${channel.name}",
-                                color = Color.White,
-                                fontSize = 16.sp,
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 5.dp),
-                            )
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                ChannelLogo(
+                                    serverUrl = serverUrl,
+                                    iconPath = channel.iconUrl,
+                                )
+
+                                Text(
+                                    text = "${formatChannelNumber(channel.number)}  ${channel.name}",
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(start = 10.dp),
+                                )
+                            }
                         }
                     }
                 }
@@ -458,6 +489,11 @@ private fun ChannelScreen(
                         fontSize = 15.sp,
                     )
                 } else {
+                    ChannelLogo(
+                        serverUrl = serverUrl,
+                        iconPath = selected.iconUrl,
+                    )
+
                     Text(
                         text = "${formatChannelNumber(selected.number)}  ${selected.name}",
                         color = Color.White,
@@ -506,6 +542,39 @@ private fun ChannelScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ChannelLogo(
+    serverUrl: String,
+    iconPath: String,
+) {
+    val imageUrl = remember(serverUrl, iconPath) {
+        when {
+            iconPath.isBlank() -> ""
+            iconPath.startsWith("http://") || iconPath.startsWith("https://") -> iconPath
+            else -> "${serverUrl.trimEnd('/')}/${iconPath.trimStart('/')}"
+        }
+    }
+
+    if (imageUrl.isBlank()) {
+        Text(
+            text = "TV",
+            color = Color(0xFF9AA4B2),
+            fontSize = 12.sp,
+            modifier = Modifier
+                .width(52.dp)
+                .height(32.dp),
+        )
+    } else {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .width(52.dp)
+                .height(32.dp),
+        )
     }
 }
 

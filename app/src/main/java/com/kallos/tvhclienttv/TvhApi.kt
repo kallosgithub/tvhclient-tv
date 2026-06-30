@@ -11,6 +11,7 @@ data class TvhChannel(
     val name: String,
     val number: String,
     val tagIds: List<String>,
+    val iconUrl: String,
 )
 
 data class TvhTag(
@@ -106,6 +107,8 @@ private fun parseChannels(json: String): List<TvhChannel> {
                 continue
             }
 
+            val iconUrl = item.optString("icon_public_url")
+
             val tagIds = buildList {
                 val tags = item.optJSONArray("tags") ?: JSONArray()
 
@@ -124,6 +127,7 @@ private fun parseChannels(json: String): List<TvhChannel> {
                     name = name,
                     number = number,
                     tagIds = tagIds,
+                    iconUrl = iconUrl,
                 )
             )
         }
