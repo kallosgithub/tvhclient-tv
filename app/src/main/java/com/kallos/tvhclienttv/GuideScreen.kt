@@ -327,8 +327,24 @@ fun GuideScreen(
                         overflow = TextOverflow.Ellipsis,
                     )
 
+                    TvKeyboard(
+                        mode = searchKeyboardMode,
+                        onModeChange = { searchKeyboardMode = it },
+                        onKeyClick = { key ->
+                            searchQuery += key
+                        },
+                        onBackspace = {
+                            if (searchQuery.isNotEmpty()) {
+                                searchQuery = searchQuery.dropLast(1)
+                            }
+                        },
+                        onSpace = {
+                            searchQuery += " "
+                        },
+                    )
+
                     Text(
-                        text = "검색 결과 ${searchResults.size}개",
+                        text = "검색 결과 ${searchResults.size}개 · 결과 선택 시 바로 재생",
                         color = GuideSubText,
                         fontSize = 13.sp,
                     )
@@ -336,11 +352,11 @@ fun GuideScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(210.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                            .height(118.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         items(
-                            items = searchResults,
+                            items = searchResults.take(2),
                             key = { it.uuid },
                         ) { channel ->
                             Button(
@@ -350,7 +366,7 @@ fun GuideScreen(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(46.dp),
+                                    .height(44.dp),
                                 colors = ButtonDefaults.colors(
                                     containerColor = Color(0xFF1B2A42),
                                     focusedContainerColor = GuideFocus,
@@ -378,22 +394,6 @@ fun GuideScreen(
                             }
                         }
                     }
-
-                    TvKeyboard(
-                        mode = searchKeyboardMode,
-                        onModeChange = { searchKeyboardMode = it },
-                        onKeyClick = { key ->
-                            searchQuery += key
-                        },
-                        onBackspace = {
-                            if (searchQuery.isNotEmpty()) {
-                                searchQuery = searchQuery.dropLast(1)
-                            }
-                        },
-                        onSpace = {
-                            searchQuery += " "
-                        },
-                    )
 
                     GuideTagButton(
                         text = "닫기",
