@@ -55,7 +55,7 @@ private enum class InputField {
     Password,
 }
 
-private enum class KeyboardMode {
+enum class KeyboardMode {
     Lower,
     Upper,
     Symbol,
@@ -285,7 +285,9 @@ private fun CompactHomeButton(
     ) {
         Text(
             text = text,
-            fontSize = 17.sp,
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -848,7 +850,7 @@ private fun SettingFieldButton(
 }
 
 @Composable
-private fun TvKeyboard(
+fun TvKeyboard(
     mode: KeyboardMode,
     onModeChange: (KeyboardMode) -> Unit,
     onKeyClick: (String) -> Unit,

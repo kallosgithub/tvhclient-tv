@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,6 +64,10 @@ fun GuideScreen(
     var selectedTagId by remember { mutableStateOf<String?>(null) }
     var selectedChannel by remember { mutableStateOf<TvhChannel?>(null) }
 
+    var showSearch by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var searchKeyboardMode by remember { mutableStateOf(KeyboardMode.Lower) }
+
     var statusMessage by remember {
         mutableStateOf("TV 가이드를 불러오는 중입니다.")
     }
@@ -107,6 +114,18 @@ fun GuideScreen(
 
     val filteredChannels = channels.filter { channel ->
         selectedTagId == null || selectedTagId in channel.tagIds
+    }
+
+    val searchKeyword = searchQuery.trim()
+
+    val searchResults = channels.filter { channel ->
+        searchKeyword.isBlank() ||
+            channel.name.contains(searchKeyword, ignoreCase = true) ||
+            channel.number.contains(searchKeyword)
+    }.take(30)
+
+    BackHandler(enabled = showSearch) {
+        showSearch = false
     }
 
     Column(
@@ -157,6 +176,16 @@ fun GuideScreen(
                 text = "새로고침",
                 selected = false,
                 onClick = { reloadGuide() },
+            )
+
+            GuideTagButton(
+                text = "검색",
+                selected = showSearch,
+                onClick = {
+                    searchQuery = ""
+                    searchKeyboardMode = KeyboardMode.Lower
+                    showSearch = true
+                },
             )
         }
 
@@ -256,6 +285,127 @@ fun GuideScreen(
                 onClick = onBack,
             )
         }
+
+        if (showSearch) {
+            Popup(
+                alignment = Alignment.Center,
+                properties = PopupProperties(
+                    focusable = true,
+                ),
+                onDismissRequest = {
+                    showSearch = false
+                },
+            ) {
+                Column(
+                    modifier = Modifier
+                        .width(620.dp)
+                        .background(Color(0xFF101B2D))
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = "채널 검색",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    Text(
+                        text = if (searchQuery.isBlank()) {
+                            "채널 번호 또는 이름을 입력하세요."
+                        } else {
+                            searchQuery
+                        },
+                        color = if (searchQuery.isBlank()) GuideSubText else Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF1B2A42))
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    Text(
+                        text = "검색 결과 ${searchResults.size}개",
+                        color = GuideSubText,
+                        fontSize = 13.sp,
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(210.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        items(
+                            items = searchResults,
+                            key = { it.uuid },
+                        ) { channel ->
+                            Button(
+                                onClick = {
+                                    showSearch = false
+                                    onPlayChannel(channel)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp),
+                                colors = ButtonDefaults.colors(
+                                    containerColor = Color(0xFF1B2A42),
+                                    focusedContainerColor = GuideFocus,
+                                ),
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    ChannelLogo(
+                                        serverUrl = serverUrl,
+                                        iconPath = channel.iconUrl,
+                                    )
+
+                                    Text(
+                                        text = "${formatChannelNumber(channel.number)}  ${channel.name}",
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(start = 10.dp),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    TvKeyboard(
+                        mode = searchKeyboardMode,
+                        onModeChange = { searchKeyboardMode = it },
+                        onKeyClick = { key ->
+                            searchQuery += key
+                        },
+                        onBackspace = {
+                            if (searchQuery.isNotEmpty()) {
+                                searchQuery = searchQuery.dropLast(1)
+                            }
+                        },
+                        onSpace = {
+                            searchQuery += " "
+                        },
+                    )
+
+                    GuideTagButton(
+                        text = "닫기",
+                        selected = false,
+                        onClick = {
+                            showSearch = false
+                        },
+                    )
+                }
+            }
+        }
+
     }
 }
 
