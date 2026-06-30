@@ -115,7 +115,7 @@ private fun TvhClientTvApp() {
             onBack = { screen = AppScreen.Home },
         )
 
-        AppScreen.Channels -> ChannelScreen(
+        AppScreen.Channels -> GuideScreen(
             serverUrl = preferences.getString("server_url", "") ?: "",
             username = preferences.getString("username", "") ?: "",
             password = preferences.getString("password", "") ?: "",

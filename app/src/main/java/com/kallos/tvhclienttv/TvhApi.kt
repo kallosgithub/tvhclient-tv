@@ -287,6 +287,56 @@ fun loadCurrentEpg(
     }
 }
 
+
+fun loadGuideEpg(
+    serverUrl: String,
+    username: String,
+    password: String,
+): EpgLoadResult {
+    return try {
+        val json = requestJson(
+            "$serverUrl/api/epg/events/grid?limit=5000&start=0",
+            username,
+            password,
+        )
+
+        val root = JSONObject(json)
+        val entries = root.optJSONArray("entries") ?: JSONArray()
+
+        val events = buildList {
+            for (index in 0 until entries.length()) {
+                val item = entries.optJSONObject(index) ?: continue
+
+                val channelUuid = item.optString("channelUuid")
+                    .ifBlank { item.optString("channel") }
+
+                val title = item.optString("title")
+                val subtitle = item.optString("subtitle")
+
+                if (channelUuid.isBlank() || title.isBlank()) {
+                    continue
+                }
+
+                add(
+                    TvhEpgEvent(
+                        channelUuid = channelUuid,
+                        title = title,
+                        subtitle = subtitle,
+                        start = item.optLong("start"),
+                        stop = item.optLong("stop"),
+                    )
+                )
+            }
+        }
+
+        EpgLoadResult(events = events)
+    } catch (error: Exception) {
+        EpgLoadResult(
+            error = error.message ?: error.javaClass.simpleName,
+        )
+    }
+}
+
 private fun defaultProfiles(): List<StreamProfile> {
     return listOf(
         StreamProfile("pass", "pass (원본)"),
