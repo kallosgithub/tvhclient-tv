@@ -39,6 +39,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerView
+import kotlinx.coroutines.delay
 import java.net.URLEncoder
 
 @Composable
@@ -55,6 +56,7 @@ fun PlayerScreen(
 
     var profiles by remember { mutableStateOf<List<StreamProfile>>(emptyList()) }
     var showProfileMenu by remember { mutableStateOf(false) }
+    var showPlaybackInfo by remember { mutableStateOf(true) }
 
     val profileMenuFocusRequester = remember { FocusRequester() }
 
@@ -145,9 +147,17 @@ fun PlayerScreen(
         }
     }
 
+    LaunchedEffect(showPlaybackInfo, showProfileMenu, streamUrl) {
+        if (showPlaybackInfo && !showProfileMenu) {
+            delay(10_000)
+            showPlaybackInfo = false
+        }
+    }
+
     BackHandler {
         if (showProfileMenu) {
             showProfileMenu = false
+            showPlaybackInfo = true
         } else {
             onBack()
         }
@@ -158,16 +168,18 @@ fun PlayerScreen(
             .fillMaxSize()
             .background(Color.Black)
             .onPreviewKeyEvent { event ->
-                if (
-                    !showProfileMenu &&
-                    event.type == KeyEventType.KeyDown &&
-                    (
+                if (!showProfileMenu && event.type == KeyEventType.KeyDown) {
+                    showPlaybackInfo = true
+
+                    if (
                         event.key == Key.DirectionCenter ||
-                            event.key == Key.Enter
-                        )
-                ) {
-                    showProfileMenu = true
-                    true
+                        event.key == Key.Enter
+                    ) {
+                        showProfileMenu = true
+                        true
+                    } else {
+                        false
+                    }
                 } else {
                     false
                 }
@@ -187,15 +199,20 @@ fun PlayerScreen(
                         setOnKeyListener { _, keyCode, event ->
                             if (
                                 !showProfileMenu &&
-                                event.action == AndroidKeyEvent.ACTION_DOWN &&
-                                (
-                                    keyCode == AndroidKeyEvent.KEYCODE_DPAD_CENTER ||
-                                        keyCode == AndroidKeyEvent.KEYCODE_ENTER ||
-                                        keyCode == AndroidKeyEvent.KEYCODE_MENU
-                                    )
+                                event.action == AndroidKeyEvent.ACTION_DOWN
                             ) {
-                                showProfileMenu = true
-                                true
+                                showPlaybackInfo = true
+
+                                if (
+                                    keyCode == AndroidKeyEvent.KEYCODE_DPAD_CENTER ||
+                                    keyCode == AndroidKeyEvent.KEYCODE_ENTER ||
+                                    keyCode == AndroidKeyEvent.KEYCODE_MENU
+                                ) {
+                                    showProfileMenu = true
+                                    true
+                                } else {
+                                    false
+                                }
                             } else {
                                 false
                             }
@@ -209,13 +226,14 @@ fun PlayerScreen(
             )
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(22.dp)
-                .background(Color(0xB3111D2E))
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-        ) {
+        if (showPlaybackInfo || showProfileMenu) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(22.dp)
+                    .background(Color(0xB3111D2E))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            ) {
             androidx.compose.material3.Text(
                 text = "${formatChannelNumber(channel.number)}  ${channel.name}",
                 color = Color.White,
@@ -229,6 +247,7 @@ fun PlayerScreen(
                 fontSize = 13.sp,
                 modifier = Modifier.padding(top = 3.dp),
             )
+            }
         }
 
         if (showProfileMenu) {
@@ -277,6 +296,7 @@ fun PlayerScreen(
                             },
                             onClick = {
                                 showProfileMenu = false
+                                showPlaybackInfo = true
 
                                 /*
                                  * UUID를 저장하고, 화면에서는 이름을 URL profile 값으로 사용한다.
@@ -293,6 +313,7 @@ fun PlayerScreen(
                     text = "닫기",
                     onClick = {
                         showProfileMenu = false
+                        showPlaybackInfo = true
                     },
                 )
             }
