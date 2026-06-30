@@ -25,6 +25,8 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -87,9 +89,17 @@ fun PlayerScreen(
         val mediaSource = ProgressiveMediaSource.Factory(httpFactory)
             .createMediaSource(MediaItem.fromUri(streamUrl))
 
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+            .build()
+
         ExoPlayer.Builder(context)
             .build()
             .apply {
+                setAudioAttributes(audioAttributes, true)
+                setHandleAudioBecomingNoisy(true)
+                volume = 1f
                 setMediaSource(mediaSource)
                 prepare()
                 playWhenReady = true
