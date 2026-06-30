@@ -1015,11 +1015,14 @@ fun TvMenuButton(
         enabled = enabled,
         colors = ButtonDefaults.colors(
             containerColor = Color(0xFF18243A),
+            contentColor = Color.White,
             focusedContainerColor = Color(0xFF4EA1FF),
+            focusedContentColor = Color.White,
         ),
     ) {
         Text(
             text = text,
+            color = Color.White,
             fontSize = 16.sp,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
         )
