@@ -519,13 +519,13 @@ private fun GuideChannelRow(
                                 else -> GuidePanel
                             }
                         )
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                 ) {
                     if (event != null && showTitle) {
                         Text(
                             text = event.title,
                             color = Color.White,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -533,7 +533,7 @@ private fun GuideChannelRow(
                         Text(
                             text = "${formatGuideTime(event.start)} ~ ${formatGuideTime(event.stop)}",
                             color = Color(0xFFD0DEEA),
-                            fontSize = 10.sp,
+                            fontSize = 9.sp,
                         )
                     }
                 }

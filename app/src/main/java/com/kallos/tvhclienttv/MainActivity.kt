@@ -288,7 +288,6 @@ private fun CompactHomeButton(
             text = text,
             color = Color.White,
             fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
             modifier = Modifier.fillMaxWidth(),
         )
     }
